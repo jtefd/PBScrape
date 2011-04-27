@@ -22,6 +22,10 @@ List the top seeded torrents for the given search query
 
 Get the number 1 top seeded torrent for the given search query
 
+=item B<--directory | -d>
+
+The directory in which to store the torrent file (defaults to current directory)
+
 =back
 
 =head1 DESCRIPTION
@@ -34,6 +38,7 @@ seeded torrent files on The Pirate Bay website.
 use strict;
 use warnings;
 
+use File::Spec::Functions qw/catfile/;
 use Getopt::Long;
 use HTML::TreeBuilder;
 use LWP::UserAgent;
@@ -51,6 +56,7 @@ GetOptions(
     \%opts,
     'list|l',
     'get-latest|g',
+    'directory|d',
     'help|h|?'
 );
 
@@ -81,6 +87,10 @@ foreach (@{$tree->extract_links('a', 'href')}) {
     	}
         elsif ($opts{'get-latest'}) {
             $response = $ua->get($link);
+            
+            if (-d $opts{'directory'}) {
+            	$filename = catfile($opts{'directory'}, $filename);
+            }
             
             open FILE, ">$filename";
             binmode FILE;
