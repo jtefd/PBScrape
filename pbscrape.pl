@@ -8,13 +8,11 @@ pbscrape
 
 =head1 SYNOPSIS
 
-pbscrape --list | --get-latest "my torrent search"
+pbscrape [--get-latest | -g ] "my torrent search"
 
 =head1 OPTIONS
 
 =over 8
-
-=item B<--list | -l>
 
 List the top seeded torrents for the given search query
 
@@ -54,7 +52,6 @@ my %opts = ();
 
 GetOptions(
     \%opts,
-    'list|l',
     'get-latest|g',
     'directory|d',
     'help|h|?'
@@ -64,7 +61,7 @@ if ($opts{'help'}) {
 	pod2usage(-verbose => 1, -exitval => 0);
 }
 
-my $query = shift || pod2usage(-verbose => 1, -exitval => 1);
+my $query = join(' ', @ARGV) || pod2usage(-verbose => 1, -exitval => 1);
 
 my $query_url = sprintf(SEARCH_URL, $query);
 
@@ -80,15 +77,10 @@ foreach (@{$tree->extract_links('a', 'href')}) {
     if ($link =~ /\.torrent$/) {
     	my $filename = pop @{[split('/', $link)]};
     	
-    	if ($opts{'list'}) {
-            $filename =~ s/\.torrent$//;
-        
-            print $filename, "\n";	
-    	}
-        elsif ($opts{'get-latest'}) {
+        if ($opts{'get-latest'}) {
             $response = $ua->get($link);
             
-            if (-d $opts{'directory'}) {
+            if ($opts{'directory'} && -d $opts{'directory'}) {
             	$filename = catfile($opts{'directory'}, $filename);
             }
             
@@ -99,5 +91,10 @@ foreach (@{$tree->extract_links('a', 'href')}) {
             
             last;	
         }
+        else {
+            $filename =~ s/\.torrent$//;
+        
+            print $filename, "\n";	
+    	}
     }  
 }
